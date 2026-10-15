@@ -16,11 +16,12 @@
       }
     })();
   </script>
-  <!-- Tipografía retro-moderna:
-       Fraunces (títulos, serif suave de aire setentero), DM Sans (texto e interfaz), DM Mono (detalles) -->
+  <!-- Tipografía:
+       Playfair Display (nombre y títulos, serif formal de alto contraste),
+       DM Sans (texto e interfaz), DM Mono (detalles) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..900,0..100,0..1;1,9..144,400..900,0..100,0..1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -30,7 +31,10 @@
         extend: {
           fontFamily: {
             sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
-            display: ['Fraunces', 'Georgia', 'serif'],
+            // Títulos y nombre comparten familia para que nada compita con la marca;
+            // los títulos usan un peso más ligero que el nombre.
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            marca: ['"Playfair Display"', 'Georgia', 'serif'],
             mono: ['"DM Mono"', 'ui-monospace', 'monospace'],
           },
           colors: {
@@ -49,15 +53,7 @@
     }
   </script>
   <style>
-    /* Fraunces con el eje "SOFT" al máximo: curvas redondeadas, más retro y cálidas */
-    .font-display {
-      font-variation-settings: 'SOFT' 100, 'WONK' 0;
-      letter-spacing: -0.01em;
-    }
-    /* En cursiva se activa "WONK": letras con la inclinación juguetona típica de los 70 */
-    .font-display.italic, .font-display .italic {
-      font-variation-settings: 'SOFT' 100, 'WONK' 1;
-    }
+    .font-display { letter-spacing: -0.01em; }
 
     /* Transiciones suaves entre temas */
     *, ::before, ::after {
@@ -153,6 +149,259 @@
     }
     .aparecer { animation: aparecer 0.6s var(--ease-suave) backwards; }
 
+    /* =============================================================
+       DEMO DEL GESTOR EN LA PORTADA
+       Mini réplica del gestor real. Todo se coloca en % de la ventana (proporción 16:11),
+       así el cursor y las tarjetas coinciden a cualquier tamaño.
+       Hay 3 escenas de 5,5 s; JS cambia la clase .escena-1/2/3 en #demo-gestor:
+         1. Arrastrar "viaje.jpg" a "Fotos"
+         2. Buscar "inf" y saltar a "informe.pdf"
+         3. Crear la carpeta "Proyectos"
+       ============================================================= */
+    .dm {
+      --dm-borde: #D7DDE3; --dm-fondo: #F8F6F4; --dm-superficie: rgba(255,255,255,.75);
+      --dm-texto: #121316; --dm-suave: #7b8591;
+      position: relative; aspect-ratio: 16 / 11; overflow: hidden;
+      border: 1px solid var(--dm-borde); border-radius: 16px;
+      background: var(--dm-fondo); color: var(--dm-texto);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,.35);
+      font-size: 9px; line-height: 1.2;
+    }
+    .dark .dm {
+      --dm-borde: #2D2F33; --dm-fondo: #121316; --dm-superficie: rgba(26,27,30,.8);
+      --dm-texto: #FFF7F2; --dm-suave: #8a8f96;
+    }
+    .dm > * { position: absolute; }
+    .dm svg { flex-shrink: 0; }
+
+    /* Barra superior */
+    .dm-barra { left: 0; right: 0; top: 0; height: 12%; border-bottom: 1px solid var(--dm-borde); background: var(--dm-superficie); }
+    .dm-marca { left: 3%; top: 6%; transform: translateY(-50%); font-family: "Playfair Display", Georgia, serif; font-weight: 500; font-size: 1.6em; }
+    .dm-buscador {
+      left: 33%; width: 34%; top: 2.5%; height: 7%;
+      display: flex; align-items: center; gap: .5em; padding: 0 .7em;
+      border: 1px solid var(--dm-borde); border-radius: 6px; background: var(--dm-fondo); color: var(--dm-suave);
+    }
+    .dm-buscador svg { width: 1.1em; height: 1.1em; }
+    .dm-placeholder { white-space: nowrap; overflow: hidden; }
+    .dm-escrito { position: absolute; left: 2.4em; font-family: "DM Mono", monospace; color: var(--dm-texto); width: 0; overflow: hidden; white-space: nowrap; }
+    .dm-icono-btn {
+      top: 2.8%; width: 4.6%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--dm-borde); border-radius: 5px; color: var(--dm-suave);
+    }
+    .dm-icono-btn svg { width: 55%; height: 55%; }
+    .dm-apagado { opacity: .4; }
+    .dm-rojo { color: #ef4444; }
+    .dm-avatar {
+      left: 91%; top: 2.8%; width: 4.6%; aspect-ratio: 1; border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      background: #FFA777; color: #121316; font-weight: 700; font-size: .75em;
+    }
+
+    /* Resultados de búsqueda */
+    .dm-resultados {
+      left: 33%; width: 34%; top: 10.5%; z-index: 4; padding: .5em 0; opacity: 0;
+      border: 1px solid var(--dm-borde); border-radius: 6px; background: var(--dm-fondo);
+      box-shadow: 0 12px 24px -8px rgba(0,0,0,.35);
+    }
+    .dm-res-cabecera { display: block; padding: 0 .8em .35em; font-size: .7em; text-transform: uppercase; letter-spacing: .08em; color: var(--dm-suave); }
+    .dm-res-fila { display: flex; align-items: center; gap: .6em; padding: .45em .8em; }
+    .dm-res-fila svg { width: 1.2em; height: 1.2em; color: var(--dm-suave); }
+    .dm-res-fila b { display: block; font-weight: 600; }
+    .dm-res-fila i { display: block; font-style: normal; font-size: .8em; color: var(--dm-suave); }
+    .dm mark { background: rgba(255,167,119,.35); color: inherit; border-radius: 2px; }
+
+    /* Barra de acciones */
+    .dm-contador { left: 14.5%; top: 16.85%; transform: translateY(-50%); font-family: "DM Mono", monospace; font-size: .85em; color: var(--dm-suave); }
+    .dm-vistas {
+      left: 50%; width: 12%; top: 13.5%; height: 6.7%; display: flex; gap: 6%; padding: .3em;
+      border: 1px solid var(--dm-borde); border-radius: 5px;
+    }
+    .dm-vistas i { flex: 1; border-radius: 3px; background: rgba(123,133,145,.25); }
+    .dm-vistas i.activa { background: #FFA777; }
+    .dm-boton {
+      top: 13.5%; height: 6.7%; display: flex; align-items: center; justify-content: center; gap: .4em;
+      border: 1px solid var(--dm-borde); border-radius: 5px; font-size: .9em; white-space: nowrap;
+    }
+    .dm-boton svg { width: 1.2em; height: 1.2em; }
+    .dm-nueva { left: 64%; width: 20%; }
+    .dm-subir { left: 85.5%; width: 11.5%; }
+
+    /* Ruta y contenedor */
+    .dm-ruta { left: 3%; top: 24.5%; font-family: "DM Mono", monospace; font-size: .85em; color: var(--dm-suave); }
+    .dm-ruta b { color: var(--dm-texto); }
+    .dm-contenedor { left: 3%; right: 3%; top: 31%; bottom: 3%; border: 1px solid var(--dm-borde); border-radius: 10px; background: var(--dm-superficie); }
+
+    /* Tarjetas (como las de la cuadrícula real) */
+    .dm-card {
+      width: 21%; height: 28.5%; display: flex; flex-direction: column; gap: .35em; padding: .5em;
+      border: 1px solid var(--dm-borde); border-radius: 8px; background: var(--dm-fondo);
+      outline: 2px dashed transparent; outline-offset: -2px;
+    }
+    .dm-check { position: absolute; top: .55em; left: .55em; width: .95em; height: .95em; border: 1px solid var(--dm-borde); border-radius: 2px; background: var(--dm-superficie); z-index: 1; }
+    .dm-prev { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: var(--dm-superficie); color: var(--dm-suave); }
+    .dm-prev svg { height: 55%; width: auto; }
+    .dm-carpeta .dm-prev svg { color: #FFA777; }
+    .dm-foto { background: linear-gradient(135deg, #FFA777, #FFD0B3); }
+    .dm-card b { font-weight: 600; font-size: .95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dm-pie { display: flex; justify-content: space-between; align-items: center; padding-top: .3em; border-top: 1px solid var(--dm-borde); font-size: .75em; color: var(--dm-suave); }
+    .dm-pie em { display: flex; gap: .25em; }
+    .dm-pie em i { width: .8em; height: .8em; border: 1px solid var(--dm-borde); border-radius: 2px; }
+    .dm-nueva-carpeta { opacity: 0; }
+
+    /* Aviso y cursor */
+    .dm-aviso {
+      left: 50%; bottom: 6%; z-index: 5; padding: .55em 1.1em; border-radius: 6px; white-space: nowrap; opacity: 0;
+      background: #121316; color: #FFF7F2; box-shadow: 0 8px 16px -6px rgba(0,0,0,.4); transform: translateX(-50%);
+    }
+    .dark .dm-aviso { background: #F8F6F4; color: #121316; }
+    .dm-cursor { left: 88%; top: 94%; width: 4.2%; z-index: 6; color: #121316; transform-origin: top left; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+    .dark .dm-cursor { color: #fff; stroke: #121316; }
+    .dm-mover { z-index: 2; }
+
+    /* ---- Escena 1: arrastrar "viaje.jpg" a "Fotos" ---- */
+    @keyframes e1Cursor {
+      0%        { left: 88%;   top: 94%; transform: scale(1); }
+      16%       { left: 38.5%; top: 79%; transform: scale(1); }
+      20%       { left: 38.5%; top: 79%; transform: scale(.85); }
+      52%       { left: 15.5%; top: 48%; transform: scale(.85); }
+      60%       { left: 15.5%; top: 48%; transform: scale(1); }
+      80%, 100% { left: 88%;   top: 94%; transform: scale(1); }
+    }
+    @keyframes e1Mover {
+      0%, 16%   { left: 28%; top: 65.5%; transform: scale(1) rotate(0); opacity: 1; box-shadow: none; }
+      22%       { left: 28%; top: 65.5%; transform: scale(1.06) rotate(-3deg); box-shadow: 0 12px 24px -8px rgba(0,0,0,.45); }
+      52%       { left: 5%;  top: 34%;   transform: scale(1.06) rotate(-3deg); opacity: 1; }
+      /* Entra en "Fotos" y se queda ahí (oculto) durante las escenas 2 y 3 */
+      60%       { left: 5%;  top: 34%;   transform: scale(.4); opacity: 0; }
+      61%, 100% { left: 28%; top: 65.5%; transform: scale(1); opacity: 0; box-shadow: none; }
+    }
+    @keyframes e1Destino {
+      0%, 44%, 72%, 100% { outline-color: transparent; box-shadow: inset 0 0 0 999px rgba(255,167,119,0);   transform: scale(1); }
+      48%, 58%           { outline-color: #FFA777;     box-shadow: inset 0 0 0 999px rgba(255,167,119,.15); transform: scale(1); }
+      63%                { outline-color: #FFA777;     box-shadow: inset 0 0 0 999px rgba(255,167,119,.15); transform: scale(1.05); }
+    }
+    @keyframes e1Aviso {
+      0%, 60%   { opacity: 0; transform: translate(-50%, 8px); }
+      66%, 86%  { opacity: 1; transform: translate(-50%, 0); }
+      92%, 100% { opacity: 0; transform: translate(-50%, 4px); }
+    }
+    .escena-1 .dm-cursor  { animation: e1Cursor  5.5s ease-in-out both; }
+    .escena-1 .dm-mover   { animation: e1Mover   5.5s ease-in-out both; }
+    .escena-1 .dm-destino { animation: e1Destino 5.5s ease-in-out both; }
+    .escena-1 .dm-aviso   { animation: e1Aviso   5.5s ease-in-out both; }
+
+    /* ---- Escena 2: buscar "inf" y saltar a "informe.pdf" ---- */
+    @keyframes e2Cursor {
+      0%        { left: 88%;   top: 94%; transform: scale(1); }
+      16%       { left: 45%;   top: 6%;  transform: scale(1); }
+      20%       { left: 45%;   top: 6%;  transform: scale(.85); }
+      24%       { left: 45%;   top: 6%;  transform: scale(1); }
+      50%       { left: 47%;   top: 18%; transform: scale(1); }
+      54%       { left: 47%;   top: 18%; transform: scale(.85); }
+      58%       { left: 47%;   top: 18%; transform: scale(1); }
+      68%       { left: 15.5%; top: 79%; transform: scale(1); }
+      84%, 100% { left: 88%;   top: 94%; transform: scale(1); }
+    }
+    @keyframes e2Buscador {
+      0%, 18%, 62%, 100% { border-color: var(--dm-borde); box-shadow: none; }
+      21%, 58%           { border-color: #FFA777; box-shadow: 0 0 0 2px rgba(255,167,119,.2); }
+    }
+    @keyframes e2Placeholder { 0%, 22%, 64%, 100% { opacity: 1; } 24%, 60% { opacity: 0; } }
+    @keyframes e2Escrito {
+      0%, 24%   { width: 0; animation-timing-function: steps(3, end); }
+      40%, 60%  { width: 3ch; }
+      61%, 100% { width: 0; }
+    }
+    @keyframes e2Resultados {
+      0%, 40%   { opacity: 0; transform: translateY(-4px); }
+      44%, 58%  { opacity: 1; transform: translateY(0); }
+      62%, 100% { opacity: 0; transform: translateY(-4px); }
+    }
+    @keyframes e2Fila { 0%, 47%, 60%, 100% { background: transparent; } 50%, 58% { background: rgba(255,167,119,.15); } }
+    @keyframes e2Encontrado {
+      0%, 64%, 92%, 100% { outline-color: transparent; box-shadow: inset 0 0 0 999px rgba(255,167,119,0); }
+      70%, 84%           { outline-color: #FFA777;     box-shadow: inset 0 0 0 999px rgba(255,167,119,.18); }
+    }
+    .escena-2 .dm-cursor      { animation: e2Cursor      5.5s ease-in-out both; }
+    .escena-2 .dm-buscador    { animation: e2Buscador    5.5s ease-in-out both; }
+    .escena-2 .dm-placeholder { animation: e2Placeholder 5.5s ease-in-out both; }
+    .escena-2 .dm-escrito     { animation: e2Escrito     5.5s linear both; }
+    .escena-2 .dm-resultados  { animation: e2Resultados  5.5s ease-in-out both; }
+    .escena-2 .dm-res-fila    { animation: e2Fila        5.5s ease-in-out both; }
+    .escena-2 .dm-encontrado  { animation: e2Encontrado  5.5s ease-in-out both; }
+
+    /* ---- Escena 3: crear la carpeta "Proyectos" ---- */
+    @keyframes e3Cursor {
+      0%        { left: 88%;   top: 94%; transform: scale(1); }
+      18%       { left: 74%;   top: 17%; transform: scale(1); }
+      22%       { left: 74%;   top: 17%; transform: scale(.85); }
+      26%       { left: 74%;   top: 17%; transform: scale(1); }
+      46%, 66%  { left: 38.5%; top: 79%; transform: scale(1); }
+      84%, 100% { left: 88%;   top: 94%; transform: scale(1); }
+    }
+    @keyframes e3Boton {
+      0%, 19%, 30%, 100% { border-color: var(--dm-borde); background: transparent; transform: scale(1); }
+      22%, 26%           { border-color: #FFA777; background: rgba(255,167,119,.15); transform: scale(.94); }
+    }
+    @keyframes e3Nueva {
+      0%, 28%   { opacity: 0; transform: scale(.6); outline-color: transparent; }
+      36%       { opacity: 1; transform: scale(1.05); outline-color: #FFA777; }
+      40%, 62%  { opacity: 1; transform: scale(1); outline-color: #FFA777; }
+      70%, 86%  { opacity: 1; transform: scale(1); outline-color: transparent; }
+      100%      { opacity: 0; transform: scale(.95); outline-color: transparent; }
+    }
+    /* "viaje.jpg" sigue dentro de "Fotos" en la escena 2 y vuelve a su sitio al final de la 3,
+       a la vez que "Proyectos" desaparece: así el ciclo vuelve al estado inicial con un fundido suave */
+    @keyframes e3Reaparece {
+      0%, 86%   { opacity: 0; transform: scale(.95); }
+      100%      { opacity: 1; transform: scale(1); }
+    }
+    .escena-2 .dm-mover { opacity: 0; }
+
+    .escena-3 .dm-cursor        { animation: e3Cursor    5.5s ease-in-out both; }
+    .escena-3 .dm-nueva         { animation: e3Boton     5.5s ease-in-out both; }
+    .escena-3 .dm-nueva-carpeta { animation: e3Nueva     5.5s ease-in-out both; }
+    .escena-3 .dm-mover         { animation: e3Reaparece 5.5s ease-in-out both; }
+
+    /* --- Botones de la portada: elevación con sombra y destello sutil al pasar el cursor --- */
+    .boton-brillo {
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s var(--ease-suave), box-shadow .25s var(--ease-suave),
+                  background-color .2s ease, border-color .2s ease;
+    }
+    /* Sombras centradas bajo el botón (poco desplazamiento, mucho difuminado) para que se lean como brillo */
+    .boton-brillo { box-shadow: 0 4px 14px -6px rgba(0, 0, 0, .25); }
+    .boton-brillo.bg-brand-orange { box-shadow: 0 4px 16px -6px rgba(255, 167, 119, .45); }
+    .boton-brillo:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px -8px rgba(0, 0, 0, .4);
+    }
+    .boton-brillo.bg-brand-orange:hover { box-shadow: 0 8px 24px -6px rgba(255, 167, 119, .55); }
+    .boton-brillo:active { transform: translateY(-1px) scale(.98); }
+    /* Franja de luz inclinada que cruza el botón de izquierda a derecha, muy tenue */
+    .boton-brillo::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -60%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .28), transparent);
+      transform: skewX(-20deg);
+      pointer-events: none;
+      opacity: 0;
+    }
+    .boton-brillo:hover::after { animation: destello .9s ease-out; }
+    .dark .boton-brillo:not(.bg-brand-orange)::after {
+      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .12), transparent);
+    }
+    @keyframes destello {
+      0%   { left: -60%; opacity: 1; }
+      100% { left: 130%; opacity: 1; }
+    }
+
     /* --- Aviso flotante --- */
     @keyframes avisoEntrada {
       from { opacity: 0; transform: translate(-50%, 12px) scale(0.97); }
@@ -234,11 +483,62 @@
     /* Arrastrar y soltar */
     [draggable="true"] { cursor: grab; }
     .arrastrando { opacity: 0.35; }
-    .destino-activo {
-      outline: 2px dashed #FFA777 !important;
-      outline-offset: -2px;
-      background-color: rgba(255, 167, 119, 0.15) !important;
+    /* El destino se tiñe de naranja; el contorno animado lo dibuja #ind-dentro (abajo) */
+    .destino-activo { background-color: rgba(255, 167, 119, 0.15) !important; }
+
+    /* --- Indicadores al arrastrar ---
+       Son dos capas fijas que se colocan encima del elemento (funcionan igual en filas y tarjetas). */
+    .ind-dentro, .ind-linea { position: fixed; z-index: 60; pointer-events: none; opacity: 0; }
+    .ind-dentro.visible, .ind-linea.visible { opacity: 1; }
+
+    /* 1) Contorno discontinuo: se dibuja alrededor del elemento y luego las rayas avanzan despacio */
+    .ind-dentro svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .ind-trazo { fill: none; stroke: #fff; stroke-width: 6; stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .ind-dentro.animar .ind-trazo { animation: trazarContorno .3s cubic-bezier(.22, 1, .36, 1) forwards; }
+    @keyframes trazarContorno { to { stroke-dashoffset: 0; } }
+    .ind-hormigas {
+      fill: none; stroke: #FFA777; stroke-width: 2; stroke-linecap: round;
+      stroke-dasharray: 8 6; animation: rayasAvanzan 1.4s linear infinite;
+      filter: drop-shadow(0 0 3px rgba(255, 167, 119, .45));   /* resplandor suave */
     }
+    @keyframes rayasAvanzan { to { stroke-dashoffset: -28; } }
+    /* Destello que da vueltas por el contorno (empieza cuando el contorno ya está dibujado) */
+    .ind-destello {
+      fill: none; stroke: rgba(255, 240, 230, .65); stroke-width: 2.5; stroke-linecap: round;
+      stroke-dasharray: 7 93; opacity: 0;
+      filter: drop-shadow(0 0 3px rgba(255, 200, 170, .6));
+    }
+    .ind-dentro.animar .ind-destello { animation: destelloContorno 1.8s .25s linear infinite; }
+    @keyframes destelloContorno {
+      0%   { stroke-dashoffset: 0;    opacity: 1; }
+      100% { stroke-dashoffset: -100; opacity: 1; }
+    }
+
+    /* 2) Línea de recolocar: se llena como una barra de carga y la recorre un brillo */
+    .ind-linea {
+      border-radius: 3px; overflow: hidden; background: #FFA777;
+      box-shadow: 0 0 6px rgba(255, 167, 119, .45), 0 0 1px rgba(255, 167, 119, .8);
+      transform-origin: left center;
+    }
+    .ind-linea.vertical { transform-origin: center top; }
+    .ind-linea.animar          { animation: cargarLinea  .22s cubic-bezier(.22, 1, .36, 1) both; }
+    .ind-linea.vertical.animar { animation-name: cargarLineaV; }
+    @keyframes cargarLinea  { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes cargarLineaV { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .ind-linea::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .5), transparent);
+      transform: translateX(-100%);
+    }
+    .ind-linea.vertical::after {
+      width: 100%; height: 40%;
+      background: linear-gradient(180deg, transparent, rgba(255, 255, 255, .5), transparent);
+      transform: translateY(-100%);
+    }
+    .ind-linea.animar::after          { animation: brilloLinea  1.1s .15s ease-in-out infinite; }
+    .ind-linea.vertical.animar::after { animation-name: brilloLineaV; }
+    @keyframes brilloLinea  { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+    @keyframes brilloLineaV { from { transform: translateY(-100%); } to { transform: translateY(260%); } }
   </style>
 </head>
 <body class="h-[100dvh] flex flex-col bg-brand-cream text-[#121316] dark:bg-brand-darkBg dark:text-[#FFF7F2] relative overflow-hidden select-none">
@@ -250,23 +550,14 @@
 
   <!-- =============================================================
        PORTADA: se muestra cuando no hay sesión iniciada.
-       Arriba: nombre (izq.), eslogan (centro), tema (der.). Centro: botones de acceso.
+       Cabecera: nombre (izq.) y tema (der.).
+       Centro: eslogan grande; debajo, demo animada del gestor (izq.) y texto + botones (der.).
        ============================================================= -->
   <div id="portada" class="hidden relative z-10 flex-1 min-h-0 overflow-y-auto flex flex-col">
-    <!-- Cabecera de la portada -->
-    <div class="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-8 pt-4 sm:pt-6">
-      <!-- Nombre (izquierda), más grande -->
-      <div class="aparecer flex items-center justify-start gap-2.5" style="animation-delay: 0ms">
-        <span class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-orange text-brand-darkBg flex items-center justify-center shadow-lg shadow-brand-orange/20">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-        </span>
-        <span class="font-display text-3xl sm:text-4xl font-bold text-brand-darkBg dark:text-[#FFF7F2]">VantaFile</span>
-      </div>
-
-      <!-- Eslogan (centro). En móvil pasa debajo, a todo el ancho -->
-      <p class="aparecer order-last col-span-2 sm:order-none sm:col-span-1 text-center font-mono text-[11px] sm:text-xs tracking-[0.18em] uppercase text-slate-500 dark:text-[#D7DDE3]" style="animation-delay: 60ms">
-        Tus archivos, siempre en orden
-      </p>
+    <!-- Cabecera de la portada: banda propia (fondo y línea inferior) para separar el nombre del resto -->
+    <header class="flex items-center justify-between gap-3 px-4 sm:px-8 py-2.5 sm:py-3 border-b border-brand-slate dark:border-brand-darkBorder bg-white/60 dark:bg-[#0d0e10]/70 backdrop-blur-[3px]">
+      <!-- Nombre (izquierda): tipografía formal, sin icono -->
+      <span class="aparecer font-marca text-3xl sm:text-4xl font-medium leading-none text-brand-darkBg dark:text-[#FFF7F2]" style="animation-delay: 0ms">VantaFile</span>
 
       <!-- Tema (derecha) -->
       <div class="flex justify-end">
@@ -275,23 +566,95 @@
           <svg class="icono-luna w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
         </button>
       </div>
-    </div>
+    </header>
 
     <!-- Contenido central -->
-    <div class="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
-      <h1 class="aparecer font-display text-4xl sm:text-6xl font-semibold leading-[1.05] [text-wrap:balance] text-brand-darkBg dark:text-[#FFF7F2] max-w-3xl" style="animation-delay: 120ms">
-        Guarda, organiza y encuentra
-        <span class="italic font-medium text-brand-orange">todo en un solo lugar.</span>
+    <div class="flex-1 flex flex-col justify-center w-full max-w-6xl mx-auto px-6 py-10 sm:py-12">
+      <!-- Eslogan como titular principal -->
+      <h1 class="aparecer text-center font-display text-4xl sm:text-5xl lg:text-6xl font-medium leading-[1.08] [text-wrap:balance] text-brand-darkBg dark:text-[#FFF7F2] max-w-4xl mx-auto" style="animation-delay: 80ms">
+        Todo en un solo lugar,
+        <span class="italic font-normal text-brand-orange">orden y simplicidad.</span>
       </h1>
-      <p class="aparecer mt-4 text-sm sm:text-base text-slate-500 dark:text-[#D7DDE3] max-w-md" style="animation-delay: 180ms">
+
+      <div class="mt-10 lg:mt-14 grid lg:grid-cols-2 gap-10 lg:gap-24 items-center">
+
+        <!-- IZQUIERDA: demo animada del gestor (decorativa).
+             Oculta en teléfonos (< 768 px): ahí no existe arrastrar y soltar y se vería diminuta.
+             En tablets va debajo del texto y los botones; en escritorio, a la izquierda. -->
+        <div class="aparecer hidden md:block order-2 lg:order-1 w-full max-w-xl mx-auto lg:mx-0" style="animation-delay: 240ms" aria-hidden="true">
+          <!-- Mini réplica del gestor. Todo va en posiciones % para que la animación encaje a cualquier tamaño.
+               La clase "escena-N" (la cambia JS cada 5,5 s) decide qué demostración se reproduce. -->
+          <div id="demo-gestor" class="dm escena-1">
+            <!-- Barra superior: nombre, buscador centrado, tema y avatar -->
+            <div class="dm-barra"></div>
+            <span class="dm-marca">VantaFile</span>
+            <div class="dm-buscador">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <span class="dm-placeholder">Buscar en todas las carpetas</span>
+              <span class="dm-escrito">inf</span>
+            </div>
+            <span class="dm-icono-btn" style="left:85%"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></span>
+            <span class="dm-avatar">TÚ</span>
+
+            <!-- Resultados de búsqueda (escena 2) -->
+            <div class="dm-resultados">
+              <span class="dm-res-cabecera">1 resultado</span>
+              <span class="dm-res-fila">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 1H7a2 2 0 00-2 2v16a2 2 0 002 2z"/></svg>
+                <span><b><mark>inf</mark>orme.pdf</b><i>Mis archivos</i></span>
+              </span>
+            </div>
+
+            <!-- Barra de acciones -->
+            <span class="dm-icono-btn dm-apagado" style="left:3%; top:13.5%"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></span>
+            <span class="dm-icono-btn dm-apagado dm-rojo" style="left:8.5%; top:13.5%"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></span>
+            <span class="dm-contador">0 seleccionados</span>
+            <span class="dm-vistas">
+              <i></i><i class="activa"></i><i></i>
+            </span>
+            <span class="dm-boton dm-nueva"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Nueva carpeta</span></span>
+            <span class="dm-boton dm-subir"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><span>Subir</span></span>
+
+            <!-- Ruta -->
+            <span class="dm-ruta">← Volver &nbsp;|&nbsp; <b>Mis archivos</b></span>
+
+            <!-- Contenedor de archivos -->
+            <div class="dm-contenedor"></div>
+
+            <!-- Tarjetas (fila 1) -->
+            <div class="dm-card dm-carpeta dm-destino" style="left:5%; top:34%"><i class="dm-check"></i><span class="dm-prev"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span><b>Fotos</b><span class="dm-pie">--<em><i></i><i></i><i></i></em></span></div>
+            <div class="dm-card dm-carpeta" style="left:28%; top:34%"><i class="dm-check"></i><span class="dm-prev"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span><b>Documentos</b><span class="dm-pie">--<em><i></i><i></i><i></i></em></span></div>
+            <div class="dm-card dm-carpeta" style="left:51%; top:34%"><i class="dm-check"></i><span class="dm-prev"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span><b>Música</b><span class="dm-pie">--<em><i></i><i></i><i></i></em></span></div>
+            <div class="dm-card" style="left:74%; top:34%"><i class="dm-check"></i><span class="dm-prev"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 21h10a2 2 0 002-2V7.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 1H7a2 2 0 00-2 2v16a2 2 0 002 2z"/></svg></span><b>notas.txt</b><span class="dm-pie">2 KB<em><i></i><i></i><i></i></em></span></div>
+            <!-- Tarjetas (fila 2) -->
+            <div class="dm-card dm-encontrado" style="left:5%; top:65.5%"><i class="dm-check"></i><span class="dm-prev"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 21h10a2 2 0 002-2V7.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 1H7a2 2 0 00-2 2v16a2 2 0 002 2z"/></svg></span><b>informe.pdf</b><span class="dm-pie">1.2 MB<em><i></i><i></i><i></i></em></span></div>
+            <div class="dm-card dm-mover" style="left:28%; top:65.5%"><i class="dm-check"></i><span class="dm-prev dm-foto"></span><b>viaje.jpg</b><span class="dm-pie">3.4 MB<em><i></i><i></i><i></i></em></span></div>
+            <!-- Carpeta que se crea en la escena 3: ocupa el hueco que dejó "viaje.jpg" al moverse a "Fotos".
+                 Al final del ciclo se funde con "viaje.jpg", que vuelve a su sitio. -->
+
+            <div class="dm-card dm-carpeta dm-nueva-carpeta" style="left:28%; top:65.5%"><i class="dm-check"></i><span class="dm-prev"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span><b>Proyectos</b><span class="dm-pie">--<em><i></i><i></i><i></i></em></span></div>
+
+            <!-- Aviso (escena 1) -->
+            <span class="dm-aviso">1 elemento movido a "Fotos"</span>
+
+            <!-- Cursor -->
+            <svg class="dm-cursor" viewBox="0 0 24 24" fill="currentColor" stroke="white" stroke-width="1"><path d="M4 2l16 9.5-7 1.6L9.5 20z"/></svg>
+          </div>
+          <p id="demo-pie" class="mt-3 text-center lg:text-left font-mono text-[11px] text-slate-400 dark:text-[#888888] transition-opacity duration-300">Arrastra un archivo sobre una carpeta y listo.</p>
+        </div>
+
+        <!-- DERECHA: texto y botones. En escritorio se pega al borde derecho para separarse de la demo -->
+        <div class="order-1 lg:order-2 lg:justify-self-end lg:max-w-md flex flex-col items-center lg:items-start text-center lg:text-left">
+      <p class="aparecer text-base sm:text-lg leading-relaxed text-slate-500 dark:text-[#D7DDE3] max-w-md" style="animation-delay: 200ms">
         Crea carpetas, arrastra tus archivos y búscalos al instante desde cualquier carpeta.
       </p>
 
-      <div class="aparecer mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto max-w-xs sm:max-w-none" style="animation-delay: 240ms">
-        <button type="button" onclick="abrirModalSesion('entrar')" class="h-11 px-7 rounded-xl bg-brand-orange text-brand-darkBg text-sm font-semibold shadow-lg shadow-brand-orange/25 hover:bg-[#FFB68C] hover:-translate-y-0.5 active:scale-[0.98] transition-all">
+      <!-- Botones grandes; al pasar el cursor se elevan con sombra y les recorre un destello (ver .boton-brillo) -->
+      <div class="aparecer mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto max-w-xs sm:max-w-none" style="animation-delay: 260ms">
+        <button type="button" onclick="abrirModalSesion('entrar')" class="boton-brillo h-14 px-10 rounded-2xl bg-brand-orange text-brand-darkBg text-base font-semibold hover:bg-[#FFB68C]">
           Iniciar sesión
         </button>
-        <button type="button" onclick="abrirModalSesion('registro')" class="h-11 px-7 rounded-xl border border-brand-slate dark:border-brand-darkBorder bg-white/70 dark:bg-brand-darkSurface/70 text-brand-darkBg dark:text-[#FFF7F2] text-sm font-semibold hover:border-brand-orange hover:-translate-y-0.5 active:scale-[0.98] transition-all">
+        <button type="button" onclick="abrirModalSesion('registro')" class="boton-brillo h-14 px-10 rounded-2xl border border-brand-slate dark:border-brand-darkBorder bg-white/70 dark:bg-brand-darkSurface/70 text-brand-darkBg dark:text-[#FFF7F2] text-base font-semibold hover:border-brand-orange">
           Crear cuenta
         </button>
       </div>
@@ -301,17 +664,19 @@
       </button>
 
       <!-- Puntos destacados -->
-      <div class="aparecer mt-12 flex flex-wrap justify-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-500 dark:text-[#D7DDE3]" style="animation-delay: 360ms">
+      <div class="aparecer mt-8 flex flex-wrap justify-center lg:justify-start gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-500 dark:text-[#D7DDE3]" style="animation-delay: 340ms">
         <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-brand-slate dark:border-brand-darkBorder bg-white/50 dark:bg-brand-darkSurface/50">
-          <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>Arrastra y suelta
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>Arrastra y organiza al instante
         </span>
         <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-brand-slate dark:border-brand-darkBorder bg-white/50 dark:bg-brand-darkSurface/50">
-          <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>Búsqueda en todas las carpetas
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>Buscar, más fácil que nunca
         </span>
         <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-brand-slate dark:border-brand-darkBorder bg-white/50 dark:bg-brand-darkSurface/50">
-          <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>Modo claro y oscuro
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>Almacenamiento gratis y privado
         </span>
       </div>
+        </div><!-- /derecha -->
+      </div><!-- /grid -->
     </div>
 
     <p class="pb-5 text-center font-mono text-[11px] text-slate-400 dark:text-[#666]">© 2026 VantaFile</p>
@@ -328,11 +693,8 @@
   <header class="relative z-30 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 sm:px-4 py-2.5 border-b border-brand-slate dark:border-brand-darkBorder bg-white/70 dark:bg-[#0d0e10]/80 backdrop-blur-[3px]">
     <!-- Marca: lleva a la carpeta principal -->
     <div class="flex-1 min-w-0 flex">
-      <a href="#" onclick="irARaiz(); return false;" class="flex items-center gap-2.5 min-w-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange">
-        <span class="w-8 h-8 rounded-lg bg-brand-orange text-brand-darkBg flex items-center justify-center flex-shrink-0 shadow-sm">
-          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-        </span>
-        <span class="font-display font-bold text-xl leading-none text-brand-darkBg dark:text-[#FFF7F2] truncate">VantaFile</span>
+      <a href="#" onclick="irARaiz(); return false;" class="flex items-center min-w-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange">
+        <span class="font-marca font-medium text-2xl leading-none text-brand-darkBg dark:text-[#FFF7F2] truncate">VantaFile</span>
       </a>
     </div>
 
@@ -430,7 +792,11 @@
       </button>
       <span class="text-slate-300 dark:text-brand-darkBorder">|</span>
       <nav id="ruta-actual" class="flex items-center gap-0.5 font-mono min-w-0 overflow-x-auto"></nav>
-      <span class="ml-auto hidden md:inline text-[11px] text-slate-400 dark:text-[#888888] whitespace-nowrap">Arrastra elementos sobre una carpeta o la ruta para moverlos</span>
+      <span class="ml-auto hidden lg:inline text-[11px] text-slate-400 dark:text-[#888888] whitespace-nowrap">Suelta en el centro de una carpeta para meterlo, o en el borde para recolocarlo</span>
+      <!-- Solo visible con orden personalizado; al pulsarla se vuelve al orden automático -->
+      <button id="chip-orden" type="button" onclick="quitarOrdenPersonalizado()" title="Volver a ordenar por nombre" class="hidden ml-auto lg:ml-2 flex-shrink-0 items-center gap-1.5 px-2.5 py-1 rounded-full border border-brand-orange/50 bg-brand-orange/10 text-[11px] text-brand-darkBg dark:text-[#FFF7F2] hover:bg-brand-orange/20 transition-colors">
+        Orden personalizado <span class="text-brand-orange">✕</span>
+      </button>
     </div>
 
     <!-- Contenedor Principal -->
@@ -599,6 +965,21 @@
       <div id="menu-acciones-lista" class="flex flex-col text-sm"></div>
     </div>
   </div>
+
+  <!-- Indicadores al arrastrar (los coloca mostrarIndicador()) -->
+  <div id="ind-dentro" class="ind-dentro" aria-hidden="true">
+    <svg>
+      <defs>
+        <!-- Máscara que "dibuja" el contorno: un trazo blanco que se va completando -->
+        <mask id="ind-mascara" maskUnits="userSpaceOnUse" x="-10" y="-10" width="5000" height="5000">
+          <rect class="ind-trazo" pathLength="1"></rect>
+        </mask>
+      </defs>
+      <rect class="ind-hormigas" mask="url(#ind-mascara)"></rect>
+      <rect class="ind-destello" pathLength="100" mask="url(#ind-mascara)"></rect>
+    </svg>
+  </div>
+  <div id="ind-linea" class="ind-linea" aria-hidden="true"></div>
 
   <!-- Aviso flotante (confirmaciones breves) -->
   <div id="aviso" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden px-4 py-2 rounded-lg text-xs shadow-xl bg-brand-darkBg text-[#FFF7F2] border border-brand-darkBorder dark:bg-brand-cream dark:text-brand-darkBg dark:border-brand-slate"></div>
@@ -785,7 +1166,16 @@
     let sistemaArchivos = { nombre: NOMBRE_RAIZ, tipo: 'carpeta', contenido: [] };
     let rutaActual = [];
     let seleccionados = new Set();
+    // Orden de la vista. columna 'manual' = orden personalizado (el que deja el usuario al arrastrar).
+    // Se recuerda en el navegador para que el orden personalizado no se pierda al recargar.
     let ordenActual = { columna: 'nombre', ascendente: true };
+    try {
+      const guardado = JSON.parse(localStorage.getItem('orden'));
+      if (guardado && guardado.columna) ordenActual = guardado;
+    } catch (e) {}
+    function guardarOrden() {
+      try { localStorage.setItem('orden', JSON.stringify(ordenActual)); } catch (e) {}
+    }
     let archivoEnEdicion = null;
     let elementosAMoverIndices = [];
     let callbackConfirmar = null;
@@ -1056,7 +1446,8 @@
         return typeof v === 'string' ? v.toLowerCase() : v;
       };
 
-      items.sort((a, b) => {
+      // En orden personalizado se respeta el orden guardado en los datos tal cual
+      if (ordenActual.columna !== 'manual') items.sort((a, b) => {
         const aCarpeta = a.tipo === 'carpeta', bCarpeta = b.tipo === 'carpeta';
         if (aCarpeta !== bCarpeta) return aCarpeta ? -1 : 1;
         let valA = valorOrden(a);
@@ -1070,6 +1461,11 @@
       // Solo los elementos visibles (tras la búsqueda) pueden seleccionarse con "todos"
       indicesVisibles = items.map(item => item.indexOriginal);
       document.getElementById('check-todos').classList.remove('checked');
+
+      const manual = ordenActual.columna === 'manual';
+      const chip = document.getElementById('chip-orden');
+      chip.classList.toggle('hidden', !manual);
+      chip.classList.toggle('flex', manual);
 
       if (modoVistaActual === 'lista') {
         vistaLista.classList.remove('hidden');
@@ -1532,21 +1928,105 @@
       });
       el.addEventListener('dragend', terminarArrastre);
 
-      if (item.tipo === 'carpeta') {
-        const carpeta = obtenerCarpetaActual().contenido[item.indexOriginal];
-        hacerDestino(el, carpeta);
-      }
+      hacerDestinoElemento(el, item);
     }
 
+    // ¿En qué zona del elemento está el cursor?
+    //   Lista: se mide de arriba a abajo. Cuadrícula: de izquierda a derecha (las tarjetas van en fila).
+    //   Carpeta: 25 % de cada borde = recolocar antes/después; el 50 % central = meter dentro.
+    //   Archivo: no puede contener nada, así que solo antes (primera mitad) o después (segunda mitad).
+    const BORDE_CARPETA = 0.25;
+    function zonaSoltar(el, e, item) {
+      const r = el.getBoundingClientRect();
+      const pos = el.tagName === 'TR'
+        ? (e.clientY - r.top) / r.height
+        : (e.clientX - r.left) / r.width;
+      if (item.tipo === 'carpeta') {
+        if (pos < BORDE_CARPETA) return 'antes';
+        if (pos > 1 - BORDE_CARPETA) return 'despues';
+        return 'dentro';
+      }
+      return pos < 0.5 ? 'antes' : 'despues';
+    }
+
+    function limpiarIndicador(el) {
+      el.classList.remove('destino-activo', 'soltar-antes', 'soltar-despues');
+    }
+
+    // Cada elemento de la lista/cuadrícula acepta lo que se suelta encima:
+    // dentro (si es carpeta) o antes/después (para recolocar)
+    function hacerDestinoElemento(el, item) {
+      const idx = item.indexOriginal;
+
+      el.addEventListener('dragover', (e) => {
+        if (!arrastre || arrastre.indices.includes(idx)) return;
+        const zona = zonaSoltar(el, e, item);
+        if (zona === 'dentro' && !esDestinoValido(obtenerCarpetaActual().contenido[idx], arrastre.indices)) {
+          limpiarIndicador(el);
+          if (indicadorActual.el === el) ocultarIndicador();
+          return;
+        }
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        limpiarIndicador(el);
+        el.classList.add(zona === 'dentro' ? 'destino-activo' : `soltar-${zona}`);
+        mostrarIndicador(el, zona);
+      });
+      el.addEventListener('dragleave', (e) => {
+        if (!el.contains(e.relatedTarget)) {
+          limpiarIndicador(el);
+          if (indicadorActual.el === el) ocultarIndicador();
+        }
+      });
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!arrastre || arrastre.indices.includes(idx)) return;
+        const zona = zonaSoltar(el, e, item);
+        const indices = arrastre.indices;
+        terminarArrastre();
+        if (zona === 'dentro') moverConAviso(indices, obtenerCarpetaActual().contenido[idx]);
+        else reordenar(indices, idx, zona);
+      });
+    }
+
+    // Recoloca los elementos arrastrados justo antes o después del elemento objetivo.
+    // Primero copia en los datos el orden que se ve en pantalla (por si estaba ordenado por nombre, etc.)
+    // y después activa el orden personalizado para que se respete.
+    function reordenar(indices, objetivo, zona) {
+      const carpeta = obtenerCarpetaActual();
+      const objetivoObj = carpeta.contenido[objetivo];
+
+      // Orden actual en pantalla (y, por seguridad, cualquier elemento que no estuviera visible al final)
+      const enPantalla = indicesVisibles.map(i => carpeta.contenido[i]);
+      carpeta.contenido.forEach(o => { if (!enPantalla.includes(o)) enPantalla.push(o); });
+
+      const movidos = enPantalla.filter(o => indices.includes(carpeta.contenido.indexOf(o)));
+      const resto = enPantalla.filter(o => !movidos.includes(o));
+      const posicion = resto.indexOf(objetivoObj) + (zona === 'despues' ? 1 : 0);
+      resto.splice(posicion, 0, ...movidos);
+      carpeta.contenido = resto;
+
+      const eraManual = ordenActual.columna === 'manual';
+      ordenActual = { columna: 'manual', ascendente: true };
+      guardarOrden();
+      aplicarCambios();
+      mostrarAviso(eraManual ? 'Orden actualizado' : 'Orden personalizado activado');
+    }
+
+    // Destinos de la barra de ruta (solo "meter dentro")
     function hacerDestino(el, destino) {
       el.addEventListener('dragover', (e) => {
         if (!arrastre || !esDestinoValido(destino, arrastre.indices)) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         el.classList.add('destino-activo');
+        mostrarIndicador(el, 'dentro');
       });
       el.addEventListener('dragleave', (e) => {
-        if (!el.contains(e.relatedTarget)) el.classList.remove('destino-activo');
+        if (!el.contains(e.relatedTarget)) {
+          el.classList.remove('destino-activo');
+          if (indicadorActual.el === el) ocultarIndicador();
+        }
       });
       el.addEventListener('drop', (e) => {
         e.preventDefault();
@@ -1560,7 +2040,73 @@
     function terminarArrastre() {
       arrastre = null;
       document.querySelectorAll('.arrastrando').forEach(n => n.classList.remove('arrastrando'));
-      document.querySelectorAll('.destino-activo').forEach(n => n.classList.remove('destino-activo'));
+      document.querySelectorAll('.destino-activo, .soltar-antes, .soltar-despues').forEach(limpiarIndicador);
+      ocultarIndicador();
+    }
+
+    // --- Indicadores animados (contorno que se dibuja / línea de carga) ---
+    // dragover se dispara muchas veces por segundo: la animación solo se reinicia
+    // cuando cambia el elemento o la zona; si no, solo se actualiza la posición.
+    let indicadorActual = { el: null, zona: null };
+
+    function reiniciarAnimacion(nodo) {
+      nodo.classList.remove('animar');
+      void nodo.offsetWidth;
+      nodo.classList.add('animar');
+    }
+
+    function mostrarIndicador(el, zona) {
+      const r = el.getBoundingClientRect();
+      const dentro = document.getElementById('ind-dentro');
+      const linea = document.getElementById('ind-linea');
+      const cambio = indicadorActual.el !== el || indicadorActual.zona !== zona;
+      indicadorActual = { el, zona };
+
+      if (zona === 'dentro') {
+        linea.classList.remove('visible');
+        Object.assign(dentro.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+        if (cambio) {
+          // Las filas de la tabla no tienen esquinas redondeadas; se usan 6 px para que quede bonito
+          const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 6;
+          dentro.querySelectorAll('rect').forEach(rc => {
+            rc.setAttribute('x', 1);
+            rc.setAttribute('y', 1);
+            rc.setAttribute('width', Math.max(r.width - 2, 0));
+            rc.setAttribute('height', Math.max(r.height - 2, 0));
+            rc.setAttribute('rx', Math.min(radio, 12));
+          });
+          reiniciarAnimacion(dentro);
+          dentro.classList.add('visible');
+        }
+        return;
+      }
+
+      // Línea antes/después. En la lista es horizontal (arriba/abajo de la fila);
+      // en la cuadrícula es vertical y va en el hueco entre tarjetas.
+      dentro.classList.remove('visible');
+      const vertical = el.tagName !== 'TR';
+      const grosor = 3;
+      let pos;
+      if (vertical) {
+        const hueco = parseFloat(getComputedStyle(el.parentElement).columnGap) || 12;
+        const x = zona === 'antes' ? r.left - hueco / 2 : r.right + hueco / 2;
+        pos = { left: x - grosor / 2, top: r.top, width: grosor, height: r.height };
+      } else {
+        const y = zona === 'antes' ? r.top : r.bottom;
+        pos = { left: r.left, top: y - grosor / 2, width: r.width, height: grosor };
+      }
+      Object.assign(linea.style, { left: `${pos.left}px`, top: `${pos.top}px`, width: `${pos.width}px`, height: `${pos.height}px` });
+      linea.classList.toggle('vertical', vertical);
+      if (cambio) {
+        reiniciarAnimacion(linea);
+        linea.classList.add('visible');
+      }
+    }
+
+    function ocultarIndicador() {
+      document.getElementById('ind-dentro').classList.remove('visible', 'animar');
+      document.getElementById('ind-linea').classList.remove('visible', 'animar');
+      indicadorActual = { el: null, zona: null };
     }
 
     function crearFantasmaArrastre(texto) {
@@ -1719,6 +2265,15 @@
         ordenActual.columna = columna;
         ordenActual.ascendente = true;
       }
+      guardarOrden();
+      renderizar();
+    }
+
+    // Etiqueta "Orden personalizado ✕": quita el orden manual y vuelve a ordenar por nombre
+    function quitarOrdenPersonalizado() {
+      ordenActual = { columna: 'nombre', ascendente: true };
+      guardarOrden();
+      animarEntrada = true;
       renderizar();
     }
 
@@ -2154,7 +2709,6 @@
     async function cerrarSesion() {
       document.getElementById('menu-usuario').classList.add('hidden');
       modoInvitado = false;
-      try { localStorage.removeItem('modoInvitado'); } catch (e) {}
       if (window.servicioAuth) await window.servicioAuth.salir();
     }
 
@@ -2219,8 +2773,11 @@
     // 10. PORTADA / APLICACIÓN
     // -------------------------------------------------------------
     // Sin sesión se ve la portada, salvo que se haya elegido "continuar sin cuenta".
+    // El modo invitado NO se recuerda: al recargar o volver a abrir la página se ve la portada otra vez.
+    // (Los archivos de invitado sí se conservan.)
     let modoInvitado = false;
-    try { modoInvitado = localStorage.getItem('modoInvitado') === '1'; } catch (e) {}
+    // Borrar la marca que guardaban versiones anteriores, para que no salte la portada
+    try { localStorage.removeItem('modoInvitado'); } catch (e) {}
 
     function mostrarVista() {
       const enApp = !!usuarioActual || modoInvitado;
@@ -2239,9 +2796,37 @@
       }
     }
 
+    // Demo de la portada: alterna 3 escenas (arrastrar, buscar, crear carpeta).
+    // Las animaciones están en el CSS; aquí solo se cambia la clase .escena-N y la frase de debajo.
+    // La escena siguiente empieza justo cuando termina la animación del cursor (no con un temporizador),
+    // así nunca se cortan a medias, aunque el navegador pause las animaciones al cambiar de pestaña.
+    (function iniciarDemoPortada() {
+      const demo = document.getElementById('demo-gestor');
+      const pie = document.getElementById('demo-pie');
+      const cursor = demo && demo.querySelector('.dm-cursor');
+      if (!demo || !cursor || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const frases = [
+        'Arrastra un archivo sobre una carpeta y listo.',
+        'Busca en todas tus carpetas al instante.',
+        'Crea carpetas y mantén todo en orden.',
+      ];
+      let escena = 0;
+
+      cursor.addEventListener('animationend', () => {
+        escena = (escena + 1) % frases.length;
+        demo.classList.remove('escena-1', 'escena-2', 'escena-3');
+        void demo.offsetWidth; // reinicia las animaciones
+        demo.classList.add(`escena-${escena + 1}`);
+
+        // La frase de debajo cambia con un pequeño fundido
+        pie.style.opacity = 0;
+        setTimeout(() => { pie.textContent = frases[escena]; pie.style.opacity = 1; }, 300);
+      });
+    })();
+
     function continuarSinCuenta() {
       modoInvitado = true;
-      try { localStorage.setItem('modoInvitado', '1'); } catch (e) {}
       animarEntrada = true;
       renderizar();
       mostrarVista();
